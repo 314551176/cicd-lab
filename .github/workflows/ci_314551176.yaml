@@ -85,7 +85,7 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - [cite_start]'**' # 符合 push 時自動執行要求 (20%) [cite: 7]
+      - '**' # 符合 push 時自動執行要求 (20%) [cite: 7]
   pull_request:
 
 permissions:
