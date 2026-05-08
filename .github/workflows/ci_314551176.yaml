@@ -124,21 +124,25 @@ jobs:
         run: npm run format:check # Prettier 檢查 (20%) [cite: 10]
 
       - name: Run tests
-        # 使用多重 reporter：
-        # 1. github-summary: 直接將結果印在 Action 主頁面 (滿足老師要求)
-        # 2. junit: 產生 XML 檔案供後續報表工具使用
+        # 增加 --reporter=github-summary 確保 Vitest 原生報表輸出
         run: npx vitest run --reporter=default --reporter=github-summary --reporter=junit --outputFile=test-results.xml
-        # 測試執行 (20%) [cite: 11]
 
-      - name: Publish Test Report (Detailed Summary)
-        uses: dorny/test-reporter@v1
-        if: always() # 關鍵：確保失敗時也會執行，將錯誤訊息顯示於結果頁面 (20%) [cite: 12, 13]
+      - name: Surface Test Results in Summary
+        # 使用這個 Action 可以把錯誤原因直接變成 Summary 表格
+        uses: mikepenz/action-junit-report@v4
+        if: always()
         with:
-          name: Vitest Tests Results (${{ matrix.node-version }})
+          report_paths: 'test-results.xml'
+          detailed_summary: true
+          include_passed: true
+
+      - name: Publish Test Report (Tab)
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Vitest Detailed Report
           path: test-results.xml
           reporter: java-junit
-          list-suites: 'failed'
-          list-tests: 'failed'
 
       - name: Compute image tag
         id: meta
