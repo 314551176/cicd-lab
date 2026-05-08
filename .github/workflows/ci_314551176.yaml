@@ -80,12 +80,12 @@
 #     needs: ci
 #     uses: ./.github/workflows/cd.yaml
 
-name: CI Pipeline
+name: ci-314551176
 
 on:
   push:
     branches:
-      - '**' # 符合 push 時自動執行要求 (20%) [cite: 7]
+      - '**'
   pull_request:
 
 permissions:
@@ -100,10 +100,12 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['22', '24'] # 跨版本測試策略
+        node-version: ['22', '24']
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -117,51 +119,60 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript typecheck
-        run: npm run typecheck # TypeScript 檢查 (20%) [cite: 9]
+      # TypeScript Type Check
+      - name: TypeScript Type Check
+        run: npm run typecheck
 
-      - name: Prettier check
-        run: npm run format:check # Prettier 檢查 (20%) [cite: 10]
+      # Prettier Check
+      - name: Prettier Check
+        run: npm run format:check
 
-      - name: Run tests
-        # 增加 --reporter=github-summary 確保 Vitest 原生報表輸出
-        run: npx vitest run --reporter=default --reporter=github-summary --reporter=junit --outputFile=test-results.xml
+      # Run Tests
+      - name: Run Tests
+        run: |
+          npm test -- \
+            --ci \
+            --reporters=default \
+            --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./reports
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
 
-      - name: Surface Test Results in Summary
-        # 使用這個 Action 可以把錯誤原因直接變成 Summary 表格
-        uses: mikepenz/action-junit-report@v4
+      # 顯示測試結果於 GitHub Actions Summary
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
-          report_paths: 'test-results.xml'
+          report_paths: 'reports/junit.xml'
           detailed_summary: true
           include_passed: true
-
-      - name: Publish Test Report (Tab)
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Vitest Detailed Report
-          path: test-results.xml
-          reporter: java-junit
+          annotate_only: false
 
       - name: Compute image tag
         id: meta
         run: |
           BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+
           if [[ "$BRANCH_NAME" == release/* ]]; then
             VERSION="${BRANCH_NAME#release/}"
             IMAGE_TAG="release-${VERSION}"
           else
             IMAGE_TAG="sha-${GITHUB_SHA::7}"
           fi
+
           echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
           echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Print image metadata
+        run: |
+          echo "Node version: ${{ matrix.node-version }}"
+          echo "Branch: ${{ steps.meta.outputs.branch_name }}"
+          echo "Image tag: ${{ steps.meta.outputs.image_tag }}"
 
       - name: Build Docker image
         if: ${{ matrix.node-version == '24' }}
         run: docker build -t my-app:${{ steps.meta.outputs.image_tag }} .
 
-  # 只有在 release 分支時才觸發 CD
   cd:
     if: ${{ startsWith(github.ref, 'refs/heads/release/') }}
     needs: ci
