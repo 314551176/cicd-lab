@@ -63,7 +63,7 @@ jobs:
           include_passed: true
           annotate_only: false
           check_name: 'Test Report (Node ${{ matrix.node-version }})'
-          
+
       - name: Compute image tag
         id: meta
         run: |
