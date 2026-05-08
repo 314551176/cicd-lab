@@ -144,7 +144,6 @@ jobs:
           detailed_summary: true
           include_passed: true
           check_name: 'Test Results (Node ${{ matrix.node-version }})'
-          fail_on_failure: false
 
       - name: Compute image tag
         id: meta
