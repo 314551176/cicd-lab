@@ -42,7 +42,7 @@ jobs:
         run: npm run format:check
 
       - name: Run tests
-        run: npm run test -- --reporter=verbose --reporter=junit --outputFile=test-results.xml
+        run: npm run test -- --reporter=verbose --reporter=github-summary --reporter=junit --outputFile=test-results.xml
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
