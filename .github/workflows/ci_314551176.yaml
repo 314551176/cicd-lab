@@ -143,7 +143,7 @@ jobs:
           report_paths: 'reports/junit.xml'
           detailed_summary: true
           include_passed: true
-          annotate_only: false
+          annotate_only: true
 
       - name: Compute image tag
         id: meta
