@@ -137,13 +137,22 @@ jobs:
             --outputFile=reports/junit.xml
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v6
+        uses: dorny/test-reporter@v1
         if: always()
         with:
-          report_paths: 'test-results.xml'
-          detailed_summary: true
-          include_passed: true
-          check_name: 'Test Results (Node ${{ matrix.node-version }})'
+          name: 'Test Results (Node ${{ matrix.node-version }})'
+          path: 'test-results.xml'
+          reporter: jest-junit
+          fail-on-error: true
+
+      # - name: Publish Test Report
+      #   uses: mikepenz/action-junit-report@v5
+      #   if: always()
+      #   with:
+      #     report_paths: 'test-results.xml'
+      #     detailed_summary: true
+      #     include_passed: true
+      #     annotate_only: true
 
       - name: Compute image tag
         id: meta
